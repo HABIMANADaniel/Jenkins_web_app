@@ -1,43 +1,53 @@
-pipeline {
+    pipeline {
     agent any
-
     environment {
         DOCKER_IMAGE = 'habimanadaniel/jenkins_web_ap'
-        DOCKER_CREDENTIALS_ID = 'Dani@1234'
+        DOCKER_CREDENTIALS_ID = 'Dani@1234' // Jenkins credentials ID for Docker Hub
     }
-
     stages {
 
-        stage('Checkout') {
+        stage('Build') {
             steps {
-                checkout scm
+                echo "Building the project..."
+                bat 'dir'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                echo "Running tests..."
+                // Add any Windows-friendly test commands here
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                script {
-                    dockerImage = docker.build("${DOCKER_IMAGE}:latest")
+                echo "Building Docker image..."
+                bat """
+                docker build -t %DOCKER_IMAGE%:latest .
+                """
+            }
+        }
+
+        stage('Push Docker Image') {
+            steps {
+                echo "Logging in and pushing Docker image to Docker Hub..."
+                withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS_ID, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    bat """
+                    docker login -u %DOCKER_USER% -p %DOCKER_PASS%
+                    docker push %DOCKER_IMAGE%:latest
+                    """
                 }
             }
         }
 
-        stage('Push to Docker Hub') {
+        stage('Deploy Docker Container') {
             steps {
-                script {
-                    docker.withRegistry('https://index.docker.io/v1/', DOCKER_CREDENTIALS_ID) {
-                        dockerImage.push('latest')
-                    }
-                }
-            }
-        }
-
-        stage('Deploy to Local Docker Host') {
-            steps {
-                bat '''
-                    docker rm -f my-web-app || true
-                    docker run -d --name my-web-app -p 8080:80 yourdockerhubusername/my-web-app:latest
-                '''
+                echo "Deploying Docker container locally..."
+                bat """
+                docker rm -f my-web-app || exit 0
+                docker run -d --name my-web-app -p 8080:80 %DOCKER_IMAGE%:latest
+                """
             }
         }
 
