@@ -32,12 +32,15 @@
         stage('Push Docker Image') {
             steps {
                 echo "Logging in and pushing Docker image to Docker Hub..."
-                withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS_ID, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    bat """
-                    docker login -u %DOCKER_USER% -p %DOCKER_PASS%
-                    docker push %DOCKER_IMAGE%:latest
-                    """
-                }
+withCredentials([usernamePassword(credentialsId: 'dockerhub-creds',
+                                  usernameVariable: 'DOCKER_USER',
+                                  passwordVariable: 'DOCKER_PASS')]) {
+    bat """
+        docker login -u %DOCKER_USER% -p %DOCKER_PASS%
+        docker push habimanadaniel/jenkins_web_ap:latest
+    """
+}
+
             }
         }
 
