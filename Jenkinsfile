@@ -2,7 +2,7 @@
     agent any
     environment {
         DOCKER_IMAGE = 'habimanadaniel/jenkins_web_ap'
-        DOCKER_CREDENTIALS_ID = 'Dani@1234' // Jenkins credentials ID for Docker Hub
+        DOCKER_CREDENTIALS_ID = 'e639f820-25b3-4b0d-85a5-196bad593e1b' // Jenkins credentials ID for Docker Hub
     }
     stages {
 
