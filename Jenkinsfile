@@ -1,28 +1,45 @@
 pipeline {
-    agent any  // Runs on any available agent
+    agent any
+
+    environment {
+        DOCKER_IMAGE = 'habimanadaniel/jenkins_web_ap'
+        DOCKER_CREDENTIALS_ID = 'Dani@1234'
+    }
 
     stages {
-        stage('Build') {
+
+        stage('Checkout') {
             steps {
-                echo "Building the project..."
-                bat 'dir'   // Windows command
+                checkout scm
             }
         }
 
-        stage('Test') {
+        stage('Build Docker Image') {
             steps {
-                echo "Running tests..."
-                // Add your Windows test commands here
-                // bat 'your-test-command'
+                script {
+                    dockerImage = docker.build("${DOCKER_IMAGE}:latest")
+                }
             }
         }
 
-        stage('Deploy') {
+        stage('Push to Docker Hub') {
             steps {
-                echo "Deploying..."
-                // Deployment commands for Windows
-                // bat 'deploy-command'
+                script {
+                    docker.withRegistry('https://index.docker.io/v1/', DOCKER_CREDENTIALS_ID) {
+                        dockerImage.push('latest')
+                    }
+                }
             }
         }
+
+        stage('Deploy to Local Docker Host') {
+            steps {
+                bat '''
+                    docker rm -f my-web-app || true
+                    docker run -d --name my-web-app -p 8080:80 yourdockerhubusername/my-web-app:latest
+                '''
+            }
+        }
+
     }
 }
